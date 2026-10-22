@@ -272,6 +272,13 @@
   .sg-more { padding: 6px 8px; font-size: .75rem; color: #666; }
   @keyframes cv-flash { 0%, 100% { box-shadow: 0 0 0 1px rgba(0,0,0,.08); } 25%, 75% { box-shadow: 0 0 0 3px var(--text-action-high-blue-france, #000091), 0 0 12px rgba(0,0,145,.5); } }
   .ev.flash, .gt-bar.flash { animation: cv-flash 1.8s ease-in-out 1; }
+  /* bulle au survol (vue mois) */
+  .cv-pop { position: fixed; z-index: 60; width: 280px; max-width: calc(100vw - 16px); background: #fff; border: 1px solid var(--border-default-grey, #ddd);
+            border-left: 4px solid var(--ev-bar, #000091); border-radius: 4px; box-shadow: 0 6px 20px rgba(0,0,0,.2); padding: .625rem .75rem; pointer-events: none; }
+  .cv-pop[hidden] { display: none; }
+  .cv-pop .ev-title { white-space: normal; font-weight: 700; color: var(--text-title-grey, #161616); }
+  .cv-pop-d { font-size: .75rem; color: var(--text-mention-grey, #666); margin-top: 2px; }
+  .cv-pop .kb-fields { margin-top: .5rem; gap: .375rem; font-size: .8125rem; }
 </style>
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
 </head>
@@ -900,7 +907,7 @@ function evHtml(p, w, card) {
   const { x, cs, ce, l } = p, r = x.r, k = evColor(r), title = displayText(cfg.titleCol, r) || 'Sans titre';
   const cls = ['ev', card ? 'ev-card' : 'ev-line', x.s < w ? 'cl' : '', x.e > w + 6 ? 'cr' : ''].join(' ');
   const fields = card ? cfg.cardFields.map((f) => fieldHtml(f, r)).filter(Boolean).join('') : '';
-  return `<div class="${cls}" data-open="1" data-id="${r.id}" ${canMove() ? 'draggable="true"' : ''} style="grid-column:${cs - w + 1} / ${ce - w + 2};grid-row:${l + 1};--ev-bg:${esc(k.bg)};--ev-fg:${esc(k.fg)};--ev-bar:${esc(k.bar)}" title="${esc(title)}"><div class="ev-title">${esc(title)}</div>${fields ? `<div class="kb-fields">${fields}</div>` : ''}</div>`;
+  return `<div class="${cls}" data-open="1" data-id="${r.id}" ${canMove() ? 'draggable="true"' : ''} style="grid-column:${cs - w + 1} / ${ce - w + 2};grid-row:${l + 1};--ev-bg:${esc(k.bg)};--ev-fg:${esc(k.fg)};--ev-bar:${esc(k.bar)}"${card ? ` title="${esc(title)}"` : ''}><div class="ev-title">${esc(title)}</div>${fields ? `<div class="kb-fields">${fields}</div>` : ''}</div>`;
 }
 function weekRowHtml(w, items, curM, today, card) {
   const lanes = [];
@@ -1915,6 +1922,35 @@ function goToRecord(id) {
   if (need) { ui.anchor = sp.s; ui.gInit = false; }
   ui.collapsed.clear(); ui.flash = id; renderBoard();
 }
+/* bulle d'informations au survol d'une barre compacte du calendrier (vue mois) */
+let popId = null;
+function hidePop() { popId = null; const p = $('#cvPop'); if (p) p.hidden = true; }
+function showPop(el) {
+  const id = Number(el.dataset.id), r = records.find((x) => x.id === id), p = $('#cvPop'); if (!r) return hidePop();
+  const sp = spanOf(r), k = evColor(r);
+  const when = !sp ? '' : sp.s === sp.e ? fmtDay(sp.s, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : `${fmtDay(sp.s, { day: 'numeric', month: 'short' })} – ${fmtDay(sp.e, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  const fields = cfg.cardFields.map((f) => fieldHtml(f, r)).filter(Boolean).join('');
+  p.style.setProperty('--ev-bar', k.bar);
+  p.innerHTML = `<div class="ev-title">${esc(displayText(cfg.titleCol, r) || 'Sans titre')}</div>${when ? `<div class="cv-pop-d">${esc(when)}</div>` : ''}${fields ? `<div class="kb-fields">${fields}</div>` : ''}`;
+  p.hidden = false; popId = id;
+  const b = el.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+  let top = b.bottom + 6; if (top + h > vh - 8) top = Math.max(8, b.top - h - 6);
+  p.style.left = Math.max(8, Math.min(b.left, vw - w - 8)) + 'px'; p.style.top = top + 'px';
+}
+document.addEventListener('mouseover', (e) => {
+  const el = e.target.closest && e.target.closest('.ev-line');
+  if (!el || drag || $('#kbOverlay').classList.contains('open')) return;
+  if (popId === Number(el.dataset.id) && !$('#cvPop').hidden) return;
+  showPop(el);
+});
+document.addEventListener('mouseout', (e) => {
+  const el = e.target.closest && e.target.closest('.ev-line');
+  if (el && !(e.relatedTarget && el.contains(e.relatedTarget))) hidePop();
+});
+document.addEventListener('dragstart', hidePop, true);
+document.addEventListener('click', hidePop, true);
+document.addEventListener('scroll', hidePop, true);
 let resizeT;
 window.addEventListener('resize', () => {
   clearTimeout(resizeT);
@@ -1988,5 +2024,6 @@ loadMeta().then(() => {
   renderBoard(); renderDrawer();
 }).catch((e) => { $('#kbBoard').innerHTML = `<div class="kb-empty"><p>Impossible de lire la structure de la table.</p><p class="fr-hint-text">${esc(e.message || e)}<br>Vérifiez que le widget a l’accès « Accès complet au document ».</p></div>`; });
 </script>
+<div class="cv-pop" id="cvPop" hidden></div>
 </body>
 </html>

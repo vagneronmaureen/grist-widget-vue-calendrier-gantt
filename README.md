@@ -15,7 +15,7 @@ Dans **Configurer → Affichage** : *Calendrier* ou *Gantt*.
 - **Mois** ou **semaine** (choix par défaut dans la configuration, modifiable à tout moment dans la barre d'outils).
 - Les éléments qui durent plusieurs jours s'étirent sur toute leur durée, y compris d'une semaine à l'autre.
 - **Glisser-déposer** d'un élément sur un autre jour : les dates de début et de fin sont décalées dans Grist.
-- Vue **semaine** : cartes complètes (titre + champs choisis). Vue **mois** : barres compactes, ou cartes complètes avec l'option « Afficher les champs dans la vue mois ».
+- Vue **semaine** : cartes complètes (titre + champs choisis). Vue **mois** : barres compactes ; au **survol**, une bulle affiche le titre, les dates et les champs configurés de la carte. L'option « Afficher les champs dans la vue mois » permet aussi d'afficher des cartes complètes en permanence.
 
 ### Gantt
 
