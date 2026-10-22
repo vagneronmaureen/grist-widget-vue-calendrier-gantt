@@ -42,7 +42,7 @@ Identiques au kanban :
 
 - **Couleur selon** : une colonne Choice / Ref donne sa couleur aux éléments (couleurs des choix définies dans Grist, sinon palette DSFR).
 - **Sans date** : les éléments sans date n'apparaissent pas dans le calendrier ; un bouton « N sans date » les liste (clic = ouverture). Dans le Gantt ils restent en liste, avec la mention « Sans date ».
-- **Recherche** dans les titres et champs des cartes.
+- **Recherche** : en tapant dans la barre de recherche (titres et champs des cartes, sans tenir compte des accents ni des majuscules), le widget propose une liste de cartes. Un clic sur une proposition (ou Entrée pour la première) **déplace le calendrier ou le Gantt jusqu'à la carte**, si elle n'est pas dans la période affichée, et la fait clignoter. Si la carte n'a pas de date, le clic **ouvre sa fenêtre de détail**. La recherche ne masque aucune carte.
 
 ## Installation
 

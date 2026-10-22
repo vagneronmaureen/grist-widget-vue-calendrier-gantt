@@ -258,6 +258,20 @@
   .gt-h { position: absolute; top: 0; bottom: 0; width: 8px; cursor: ew-resize; z-index: 2; }
   .gt-h.l { left: 0; } .gt-h.r { right: 0; }
   .gt-bar:hover .gt-h { background: rgba(0,0,0,.12); }
+  /* recherche : propositions */
+  .cv-search { position: relative; }
+  .cv-search input { width: 260px; max-width: 100%; }
+  .sg-list { position: absolute; top: calc(100% + 4px); right: 0; width: 340px; max-width: 90vw; max-height: 60vh; overflow-y: auto; z-index: 48; background: #fff;
+             border: 1px solid var(--border-default-grey, #ddd); border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,.18); padding: 4px; }
+  .sg-list[hidden] { display: none; }
+  .sg-item { display: block; width: 100%; text-align: left; border: 0; background: none; cursor: pointer; padding: 6px 8px; border-radius: 2px; font: inherit; }
+  .sg-item:hover, .sg-item:focus { background: #f0f0fb; outline: none; }
+  .sg-t { display: block; font-size: .875rem; font-weight: 600; line-height: 1.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-title-grey, #161616); }
+  .sg-m { display: block; font-size: .75rem; line-height: 1rem; color: var(--text-mention-grey, #666); }
+  .sg-m.nodate { color: #b34000; }
+  .sg-more { padding: 6px 8px; font-size: .75rem; color: #666; }
+  @keyframes cv-flash { 0%, 100% { box-shadow: 0 0 0 1px rgba(0,0,0,.08); } 25%, 75% { box-shadow: 0 0 0 3px var(--text-action-high-blue-france, #000091), 0 0 12px rgba(0,0,145,.5); } }
+  .ev.flash, .gt-bar.flash { animation: cv-flash 1.8s ease-in-out 1; }
 </style>
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
 </head>
@@ -266,7 +280,7 @@
   <h1 class="kb-title" id="kbTitle">Calendrier / Gantt</h1>
   <div class="cv-tools" id="cvTools"></div>
   <div class="kb-spacer"></div>
-  <input class="fr-input fr-input--sm" type="search" id="kbSearch" placeholder="Rechercher…" aria-label="Rechercher">
+  <div class="cv-search"><input class="fr-input fr-input--sm" type="search" id="kbSearch" placeholder="Rechercher une carte…" aria-label="Rechercher une carte" autocomplete="off"><div class="sg-list" id="kbSuggest" hidden></div></div>
   <button class="fr-btn fr-btn--tertiary fr-btn--sm fr-icon-refresh-line" data-act="refresh" title="Recharger la structure">Recharger</button>
   <button class="fr-btn fr-btn--secondary fr-btn--sm fr-icon-settings-5-line fr-btn--icon-left kb-owner-only kb-hidden" data-act="settings">Configurer</button>
 </header>
@@ -770,11 +784,6 @@ function evColor(r) {
   }
   return { bg: PALETTE[0].bg, fg: '#161616', bar: PALETTE[0].bar };
 }
-function matches(r) {
-  if (!search) return true;
-  const ids = [cfg.titleCol, ...cfg.cardFields.map((f) => f.col)];
-  return ids.some((id) => displayText(id, r).toLowerCase().includes(search));
-}
 
 /* déplacer / redimensionner : on décale les dates d'un nombre entier de jours
    (une date-heure garde donc son heure, au changement d'heure d'été près) */
@@ -842,7 +851,7 @@ function fieldHtml(f, r) {
  * Les choix « Mois / Semaine », « Calendrier / Défilement » et l'échelle de la barre d'outils valent pour la session :
  * leur valeur de départ est celle de la configuration.
  * ------------------------------------------------------------------ */
-let ui = { calView: 'month', ganttView: 'scroll', zoom: 'day', anchor: null, rs: null, re: null, gInit: false, keepL: null, sL: 0, sT: 0, collapsed: new Set(), undated: false };
+let ui = { calView: 'month', ganttView: 'scroll', zoom: 'day', anchor: null, rs: null, re: null, gInit: false, keepL: null, sL: 0, sT: 0, collapsed: new Set(), undated: false, flash: null };
 let lastRender = 0;
 function syncUi() {
   ui.calView = cfg.calView === 'week' ? 'week' : 'month';
@@ -1030,7 +1039,7 @@ function renderBoard() {
   const oldG = board.querySelector('.gt-scroll'); if (oldG) { ui.sL = oldG.scrollLeft; ui.sT = oldG.scrollTop; }
   const oldC = board.querySelector('.cal-body'), calT = oldC ? oldC.scrollTop : 0;
   const items = [], undated = [];
-  records.filter(matches).forEach((r) => { const sp = spanOf(r); if (sp) items.push({ r, s: sp.s, e: sp.e }); else undated.push(r); });
+  records.forEach((r) => { const sp = spanOf(r); if (sp) items.push({ r, s: sp.s, e: sp.e }); else undated.push(r); });
   items.sort((a, b) => a.s - b.s || (b.e - b.s) - (a.e - a.s) || a.r.id - b.r.id);
   const gantt = cfg.mode === 'gantt', scroll = gantt && ui.ganttView === 'scroll';
   tools.innerHTML = toolsHtml(scroll ? '' : periodTitle(), undated);
@@ -1049,6 +1058,12 @@ function renderBoard() {
       sc.scrollTop = ui.sT;
     }
   } else { const nb = board.querySelector('.cal-body'); if (nb) nb.scrollTop = calT; }
+  if (ui.flash !== null) {                                  // carte retrouvée par la recherche : on la fait clignoter
+    const id = ui.flash; ui.flash = null;
+    board.querySelectorAll(`.ev[data-id="${id}"], .gt-bar[data-id="${id}"]`).forEach((n) => n.classList.add('flash'));
+    const t = board.querySelector(`.gt-bar[data-id="${id}"], .ev[data-id="${id}"]`);
+    if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -1605,6 +1620,7 @@ document.addEventListener('click', async (e) => {
     case 'cvNext': navigate(1); break;
     case 'cvSet': ui[a.dataset.k] = a.dataset.v; ui.gInit = false; renderBoard(); break;
     case 'cvUndated': ui.undated = !ui.undated; renderBoard(); break;
+    case 'sgGo': goToRecord(Number(a.dataset.id)); break;
     case 'gtGroup': { const k = a.dataset.key; ui.collapsed.has(k) ? ui.collapsed.delete(k) : ui.collapsed.add(k); renderBoard(); break; }
     case 'save': saveModal(); break;
     case 'refresh': await loadMeta(); normRecords(); renderBoard(); renderDrawer(); toast('Structure rechargée'); break;
@@ -1692,7 +1708,20 @@ async function uploadFiles(colId, files) {
 }
 document.addEventListener('mousedown', (e) => { if (e.target.closest && e.target.closest('.kb-ref .kb-dd-item')) e.preventDefault(); });   // garde le focus dans la recherche
 document.addEventListener('click', (e) => { if (!e.target.closest('.kb-dd')) document.querySelectorAll('.kb-dd.kb-open').forEach((n) => n.classList.remove('kb-open')); });
-$('#kbSearch').addEventListener('input', (e) => { search = e.target.value.trim().toLowerCase(); renderBoard(); });
+$('#kbSearch').addEventListener('input', (e) => { search = e.target.value; showSuggest(); });
+$('#kbSearch').addEventListener('focus', () => { if (search.trim()) showSuggest(); });
+$('#kbSearch').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { const b = document.querySelector('#kbSuggest .sg-item'); if (b) { e.preventDefault(); b.click(); } }
+  else if (e.key === 'Escape') { hideSuggest(); e.stopPropagation(); }
+  else if (e.key === 'ArrowDown') { const b = document.querySelector('#kbSuggest .sg-item'); if (b) { e.preventDefault(); b.focus(); } }
+});
+document.addEventListener('keydown', (e) => {          // flèches dans la liste des propositions
+  const it = e.target.closest && e.target.closest('.sg-item'); if (!it) return;
+  const n = e.key === 'ArrowDown' ? it.nextElementSibling : e.key === 'ArrowUp' ? it.previousElementSibling : null;
+  if (e.key === 'ArrowUp' && !n) { e.preventDefault(); $('#kbSearch').focus(); }
+  else if (n && n.classList.contains('sg-item')) { e.preventDefault(); n.focus(); }
+});
+document.addEventListener('click', (e) => { if (!e.target.closest('.cv-search')) hideSuggest(); });
 document.addEventListener('input', (e) => {             // recherche d'un champ dans la barre d'éléments (pas de nouveau rendu : on garde le focus)
   if (e.target.dataset && e.target.dataset.blk === 'search') { palSearch = e.target.value; filterPalette(); }
 });
@@ -1850,6 +1879,42 @@ $('#kbBoard').addEventListener('scroll', (e) => {
   if (sc.scrollLeft < vis * 0.4) { ui.rs -= ext; ui.keepL = sc.scrollLeft + ext * dw; renderBoard(); }
   else if (sc.scrollWidth - sc.scrollLeft - vis < vis * 0.4) { ui.re += ext; ui.keepL = sc.scrollLeft; renderBoard(); }
 }, true);
+/* recherche : propositions, puis déplacement du calendrier jusqu'à la carte (ou ouverture de la fenêtre si elle n'a pas de date) */
+function suggestHtml() {
+  const q = norm(search); if (!q) return '';
+  const ids = [cfg.titleCol, ...cfg.cardFields.map((f) => f.col)];
+  const hits = records.map((r) => ({ r, sp: spanOf(r) })).filter((x) => ids.some((id) => norm(displayText(id, x.r)).includes(q)));
+  if (!hits.length) return '<div class="sg-more">Aucune carte trouvée</div>';
+  hits.sort((a, b) => (a.sp ? 0 : 1) - (b.sp ? 0 : 1) || (a.sp && b.sp ? a.sp.s - b.sp.s : 0));
+  const range = (sp) => sp.s === sp.e ? fmtDay(sp.s, { day: 'numeric', month: 'short', year: 'numeric' })
+    : `${fmtDay(sp.s, { day: 'numeric', month: 'short' })} – ${fmtDay(sp.e, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  return hits.slice(0, 8).map(({ r, sp }) => `<button type="button" class="sg-item" data-act="sgGo" data-id="${r.id}"><span class="sg-t">${esc(displayText(cfg.titleCol, r) || 'Sans titre')}</span>`
+      + (sp ? `<span class="sg-m">${esc(range(sp))}</span>` : '<span class="sg-m nodate">Sans date · ouvrir la fiche</span>') + '</button>').join('')
+    + (hits.length > 8 ? `<div class="sg-more">${hits.length - 8} autre${hits.length - 8 > 1 ? 's' : ''} résultat${hits.length - 8 > 1 ? 's' : ''} : précisez la recherche</div>` : '');
+}
+function showSuggest() { const el = $('#kbSuggest'), h = meta.loaded ? suggestHtml() : ''; el.innerHTML = h; el.hidden = !h; }
+function hideSuggest() { $('#kbSuggest').hidden = true; }
+function goToRecord(id) {
+  const r = records.find((x) => x.id === id); if (!r) return;
+  hideSuggest();
+  const sp = spanOf(r);
+  if (!sp) { openModal(id); return; }
+  let need;
+  if (cfg.mode === 'gantt' && ui.ganttView === 'scroll') {
+    const sc = document.querySelector('.gt-scroll');
+    if (sc && Number(sc.dataset.dayw)) {
+      const dw = Number(sc.dataset.dayw), v0 = ui.rs + sc.scrollLeft / dw, v1 = v0 + (sc.clientWidth - Number(sc.dataset.left)) / dw;
+      need = sp.e < v0 || sp.s > v1;
+    } else need = true;
+  } else {
+    let vs, ve;
+    if (ui.calView === 'week') { vs = weekStart(ui.anchor); ve = vs + 6; }
+    else { const p = ymd(ui.anchor); vs = dayFrom(p.y, p.m, 1); ve = dayFrom(p.y, p.m + 1, 0); }
+    need = sp.e < vs || sp.s > ve;
+  }
+  if (need) { ui.anchor = sp.s; ui.gInit = false; }
+  ui.collapsed.clear(); ui.flash = id; renderBoard();
+}
 let resizeT;
 window.addEventListener('resize', () => {
   clearTimeout(resizeT);
