@@ -59,6 +59,15 @@ Identiques au kanban :
 - **Sans date** : les éléments sans date n'apparaissent pas dans le calendrier ; un bouton « N sans date » les liste (clic = ouverture). Dans le Gantt « une ligne par élément » ils restent en liste, avec la mention « Sans date » ; dans la vue par intervenant, ils sont accessibles par le bouton.
 - **Recherche** : en tapant dans la barre de recherche (titres et champs des cartes, sans tenir compte des accents ni des majuscules), le widget propose une liste de cartes. Un clic sur une proposition (ou Entrée pour la première) **déplace le calendrier ou le Gantt jusqu'à la carte**, si elle n'est pas dans la période affichée, et la fait clignoter. Si la carte n'a pas de date, le clic **ouvre sa fenêtre de détail**. La recherche ne masque aucune carte.
 
+## Version
+
+La version du widget s'affiche **en bas à droite**. Elle est définie par la constante `WIDGET_VERSION` en tête du script de `index.html` : à augmenter à chaque modification.
+
+| Version | Contenu |
+| --- | --- |
+| 1.1.0 | Gantt par intervenant (charge, couleur par personne), densités, échelle « Année », version affichée |
+| 1.0.0 | Calendrier (mois / semaine), Gantt (défilement / calendrier), recherche avec propositions, bulle au survol |
+
 ## Installation
 
 1. Poussez ce dépôt sur GitHub, puis **Settings → Pages**, branche `main`, dossier `/ (root)`. Le widget est alors disponible sur `https://<utilisateur>.github.io/grist-calendrier-gantt-dsfr/`.

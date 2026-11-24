@@ -258,6 +258,7 @@
   .gt-h { position: absolute; top: 0; bottom: 0; width: 8px; cursor: ew-resize; z-index: 2; }
   .gt-h.l { left: 0; } .gt-h.r { right: 0; }
   .gt-bar:hover .gt-h { background: rgba(0,0,0,.12); }
+  .cv-foot { flex: none; display: flex; justify-content: flex-end; padding: .125rem 1rem; border-top: 1px solid var(--border-default-grey, #ddd); background: #fff; font-size: .6875rem; line-height: 1.25rem; color: var(--text-mention-grey, #666); user-select: none; }
   /* gantt par intervenant : une ligne par personne, études empilées, bande de charge */
   .gt-person .gt-name { flex-direction: row; align-items: center; gap: .5rem; cursor: default; }
   .gt-person .gt-name:hover { background: #fff; }
@@ -306,6 +307,7 @@
   <button class="fr-btn fr-btn--secondary fr-btn--sm fr-icon-settings-5-line fr-btn--icon-left kb-owner-only kb-hidden" data-act="settings">Configurer</button>
 </header>
 <main class="kb-board" id="kbBoard"></main>
+<footer class="cv-foot" id="cvFoot"></footer>
 <div class="kb-overlay" id="kbOverlay"></div>
 <aside class="kb-drawer" id="kbDrawer" aria-label="Configuration"></aside>
 <div class="kb-toast" id="kbToast"></div>
@@ -314,6 +316,8 @@
 /* ------------------------------------------------------------------ *
  * Mode démo : si le widget est ouvert hors de Grist, on simule l'API
  * ------------------------------------------------------------------ */
+/* Version du widget : à augmenter à chaque modification (affichée en bas à droite) */
+const WIDGET_VERSION = '1.1.0';
 const IN_GRIST = typeof grist !== 'undefined' && window.parent !== window;
 /* En mode démo, ?role=owners|editors|viewers|error|probe-owner|probe-other simule la réponse de l'API Grist pour tester la détection du rôle */
 const DEMO_ROLE = !IN_GRIST ? new URLSearchParams(location.search).get('role') : null;
@@ -434,6 +438,7 @@ const PALETTE = [
   { n: 'Gris',              bar: '#666666', bg: '#eeeeee' },
   { n: 'Gris clair',        bar: '#929292', bg: '#f6f6f6' },
 ];
+{ const f = document.getElementById('cvFoot'); if (f) { f.textContent = 'Calendrier / Gantt · v' + WIDGET_VERSION; f.title = 'Version du widget : ' + WIDGET_VERSION; } }
 const HIDE = /^(gristHelper_|manualSort)/;
 const GROUP_TYPES = ['Choice', 'ChoiceList', 'Ref', 'RefList'];
 
