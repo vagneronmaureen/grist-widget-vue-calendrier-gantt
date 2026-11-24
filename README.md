@@ -57,7 +57,7 @@ Identiques au kanban :
 
 - **Couleur selon** : une colonne Choice / Ref donne sa couleur aux éléments (couleurs des choix définies dans Grist, sinon palette DSFR).
 - **Sans date** : les éléments sans date n'apparaissent pas dans le calendrier ; un bouton « N sans date » les liste (clic = ouverture). Dans le Gantt « une ligne par élément » ils restent en liste, avec la mention « Sans date » ; dans la vue par intervenant, ils sont accessibles par le bouton.
-- **Recherche** : en tapant dans la barre de recherche (titres et champs des cartes, sans tenir compte des accents ni des majuscules), le widget propose une liste de cartes. Un clic sur une proposition (ou Entrée pour la première) **déplace le calendrier ou le Gantt jusqu'à la carte**, si elle n'est pas dans la période affichée, et la fait clignoter. Si la carte n'a pas de date, le clic **ouvre sa fenêtre de détail**. La recherche ne masque aucune carte.
+- **Recherche** : la **loupe** de la barre d'outils s'élargit en champ au clic (et se referme d'elle-même si on la quitte sans rien taper ; Échap la ferme). En tapant (titres et champs des cartes, sans tenir compte des accents ni des majuscules), le widget propose une liste de cartes. Un clic sur une proposition (ou Entrée pour la première) **déplace le calendrier ou le Gantt jusqu'à la carte**, si elle n'est pas dans la période affichée, et la fait clignoter. Si la carte n'a pas de date, le clic **ouvre sa fenêtre de détail**. La recherche ne masque aucune carte.
 
 ## Version
 
@@ -65,6 +65,7 @@ La version du widget s'affiche **en bas à droite**. Elle est définie par la co
 
 | Version | Contenu |
 | --- | --- |
+| 1.1.1 | Barre d'outils plus compacte : configuration réduite à une roue dentée, recherche réduite à une loupe qui s'élargit au clic, titre masqué si la place manque |
 | 1.1.0 | Gantt par intervenant (charge, couleur par personne), densités, échelle « Année », version affichée |
 | 1.0.0 | Calendrier (mois / semaine), Gantt (défilement / calendrier), recherche avec propositions, bulle au survol |
 
